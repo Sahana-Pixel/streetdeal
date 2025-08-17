@@ -1,13 +1,15 @@
 import { motion } from "framer-motion";
 import { Truck, Handshake, DollarSign, Smartphone, ShoppingCart } from "lucide-react";
 import BackgroundWrapper from "./BackgroundWrapper";
+import { Link } from "react-router-dom";
 
 const Home = () => {
+  const MotionLink = motion(Link);
   return (
     // <div className="min-[120vh]-screen">
     <BackgroundWrapper>
       {/* Hero Section */}
-      <section id="home" className="bg-gradient-to-br from-slate-900 to-blue-900 text-white">
+      {/* <section id="home" className="bg-gradient-to-br from-slate-900 to-blue-900 text-white"> */}
         <div className="container mx-auto px-30 py-10 md:py-28 lg:py-32">
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Left Side - Text Content */}
@@ -38,23 +40,24 @@ const Home = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="flex flex-wrap gap-3"
               >
-                <motion.a
-                  href="/vendor/signup"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-base font-bold"
-                >
-                  <span>👉</span> Join as Vendor
-                </motion.a>
+              <MotionLink
+  to="/vendor"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-base font-bold"
+>
+  <span>👉</span> Join as Vendor
+</MotionLink>
                 
-                <motion.a
-                  href="/supplier/signup"
+                 <MotionLink
+                to="/supplier"
+                  
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex items-center gap-2 border-2 border-blue-400 hover:border-blue-300 text-blue-400 hover:text-blue-300 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-base font-bold"
                 >
                   <span>🤝</span> Join as Supplier
-                </motion.a>
+         </MotionLink>
               </motion.div>
 
               {/* Why Choose Us Section - Single Line Cards */}
@@ -199,7 +202,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-      </section>
+      {/* </section> */}
 </BackgroundWrapper>  );
 };
 

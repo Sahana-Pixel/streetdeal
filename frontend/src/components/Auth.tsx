@@ -1,285 +1,203 @@
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, User, Store, Mail, Lock, Phone, MapPin, Truck } from "lucide-react";
+import { motion } from "framer-motion";
+import { ChevronDown, ChevronUp, X } from "lucide-react";
 
-type AuthModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  initialMode?: "login" | "signup";
-};
+const roles = [
+  { value: "vendor", label: "Vendor" },
+  { value: "supplier", label: "Supplier" },
+];
 
-type UserRole = "vendor" | "supplier" | null;
+const AuthPage = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-export const AuthModal = ({ 
-  isOpen, 
-  onClose, 
-  initialMode = "login" 
-}: AuthModalProps) => {
-  const [mode, setMode] = useState<"login" | "signup">(initialMode);
-  const [role, setRole] = useState<UserRole>(null);
+  const initialMode = searchParams.get("mode") === "register" ? false : true;
+  const initialRole = searchParams.get("role") || "vendor";
+
+  const [isLogin, setIsLogin] = useState(initialMode);
+  const [selectedRole, setSelectedRole] = useState(initialRole);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    location: ""
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mode === "login") {
-      console.log("Logging in", { email: formData.email, password: formData.password, role });
-    } else {
-      console.log("Signing up", { ...formData, role });
-    }
-    onClose();
-  };
-
-  const toggleMode = () => {
-    setMode(prev => prev === "login" ? "signup" : "login");
-    setRole(null);
-  };
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            className="relative bg-slate-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden"
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
+        className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-md p-6 relative"
+      >
+        <button
+          onClick={() => navigate("/")}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white"
+        >
+          <X className="h-6 w-6" />
+        </button>
+
+        <h2 className="text-2xl font-bold text-white mb-6">
+          {isLogin ? "Login" : "Create Account"}
+        </h2>
+
+        {/* Role Dropdown */}
+        <div className="mb-4 relative">
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            {isLogin ? "Login as" : "Register as"}
+          </label>
+          <button
+            onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+            className="w-full flex justify-between items-center px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white hover:bg-slate-600 transition"
           >
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
-            >
-              <X size={24} />
-            </button>
-
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">
-                {mode === "login" ? "Login" : "Sign Up"}
-              </h2>
-
-              {/* Role Selection Dropdown */}
-              <div className="relative mb-6">
+            <span>{roles.find((r) => r.value === selectedRole)?.label}</span>
+            {showRoleDropdown ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </button>
+          {showRoleDropdown && (
+            <div className="absolute z-10 mt-1 w-full bg-slate-700 border border-slate-600 rounded-lg shadow-lg overflow-hidden">
+              {roles.map((role) => (
                 <button
-                  type="button"
-                  onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border ${
-                    role ? "border-blue-400" : "border-slate-600"
-                  } bg-slate-700 text-slate-200`}
-                >
-                  <div className="flex items-center gap-2">
-                    {role === "vendor" ? (
-                      <Store size={18} className="text-sky-300" />
-                    ) : role === "supplier" ? (
-                      <Truck size={18} className="text-indigo-300" />
-                    ) : (
-                      <User size={18} />
-                    )}
-                    <span>{role ? role.charAt(0).toUpperCase() + role.slice(1) : "Select your role"}</span>
-                  </div>
-                  <motion.div
-                    animate={{ rotate: showRoleDropdown ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChevronDown size={18} />
-                  </motion.div>
-                </button>
-
-                <AnimatePresence>
-                  {showRoleDropdown && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute z-10 mt-1 w-full bg-slate-700 rounded-lg shadow-lg overflow-hidden"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRole("vendor");
-                          setShowRoleDropdown(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-slate-600 text-slate-200"
-                      >
-                        <Store size={18} className="text-sky-300" />
-                        <span>Vendor</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRole("supplier");
-                          setShowRoleDropdown(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-slate-600 text-slate-200"
-                      >
-                        <Truck size={18} className="text-indigo-300" />
-                        <span>Supplier</span>
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <form onSubmit={handleSubmit}>
-                {mode === "signup" && (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-slate-400 mb-2">
-                        {role === "vendor" ? "Shop Name" : "Your Name"}
-                      </label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          placeholder={role === "vendor" ? "Enter shop name" : "Enter your name"}
-                          className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="mb-4">
-                  <label className="block text-slate-400 mb-2">Email</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="Enter your email"
-                      className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {mode === "signup" && (
-                  <>
-                    <div className="mb-4">
-                      <label className="block text-slate-400 mb-2">Phone</label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          placeholder="Enter your phone number"
-                          className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="block text-slate-400 mb-2">Location</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
-                        <input
-                          type="text"
-                          name="location"
-                          value={formData.location}
-                          onChange={handleChange}
-                          placeholder="Enter your location"
-                          className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="mb-6">
-                  <label className="block text-slate-400 mb-2">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500" />
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Enter your password"
-                      className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={!role}
-                  className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-300 ${
-                    role
-                      ? "bg-blue-600 hover:bg-blue-500 shadow-lg hover:shadow-xl"
-                      : "bg-slate-600 cursor-not-allowed"
+                  key={role.value}
+                  onClick={() => {
+                    setSelectedRole(role.value);
+                    setShowRoleDropdown(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 hover:bg-slate-600 transition-colors ${
+                    selectedRole === role.value ? "bg-blue-600 text-white" : "text-slate-200"
                   }`}
                 >
-                  {mode === "login" ? "Login" : "Sign Up"}
+                  {role.label}
                 </button>
-
-                <div className="mt-4 text-center text-slate-400">
-                  {mode === "login" ? (
-                    <span>
-                      Not registered?{" "}
-                      <button
-                        type="button"
-                        onClick={toggleMode}
-                        className="text-blue-400 hover:text-blue-300 underline transition-colors"
-                      >
-                        Switch to Signup
-                      </button>
-                    </span>
-                  ) : (
-                    <span>
-                      Already have an account?{" "}
-                      <button
-                        type="button"
-                        onClick={toggleMode}
-                        className="text-blue-400 hover:text-blue-300 underline transition-colors"
-                      >
-                        Switch to Login
-                      </button>
-                    </span>
-                  )}
-                </div>
-              </form>
+              ))}
             </div>
-          </motion.div>
+          )}
         </div>
-      )}
-    </AnimatePresence>
+
+        {/* Forms */}
+        {isLogin ? (
+          <form className="space-y-4">
+            <div>
+              <label htmlFor="login-email" className="block text-sm font-medium text-slate-300 mb-1">
+                Email
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="your@email.com"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="login-password" className="block text-sm font-medium text-slate-300 mb-1">
+                Password
+              </label>
+              <input
+                id="login-password"
+                type="password"
+                className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              type="submit"
+              className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-500"
+            >
+              Login
+            </motion.button>
+          </form>
+        ) : (
+          <form className="space-y-4">
+            <div>
+              <label htmlFor="signup-name" className="block text-sm font-medium text-slate-300 mb-1">
+                {selectedRole === "vendor" ? "Shop Name" : "Your Name"}
+              </label>
+              <input
+                id="signup-name"
+                type="text"
+                className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={selectedRole === "vendor" ? "Awesome Shop" : "John Doe"}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="signup-email" className="block text-sm font-medium text-slate-300 mb-1">
+                Email
+              </label>
+              <input
+                id="signup-email"
+                type="email"
+                className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="your@email.com"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="signup-phone" className="block text-sm font-medium text-slate-300 mb-1">
+                Phone
+              </label>
+              <input
+                id="signup-phone"
+                type="tel"
+                className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="+1234567890"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="signup-password" className="block text-sm font-medium text-slate-300 mb-1">
+                Password
+              </label>
+              <input
+                id="signup-password"
+                type="password"
+                className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="signup-location" className="block text-sm font-medium text-slate-300 mb-1">
+                {selectedRole === "vendor" ? "Shop Location" : "Your Location"}
+              </label>
+              <input
+                id="signup-location"
+                type="text"
+                className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={selectedRole === "vendor" ? "123 Main St, City" : "Your area"}
+                required
+              />
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              type="submit"
+              className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-500"
+            >
+              Sign Up
+            </motion.button>
+          </form>
+        )}
+
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-white text-sm font-medium"
+          >
+            {isLogin ? (
+              <>
+                Not registered?{" "}
+                <span className="text-blue-400 underline hover:text-blue-300">Switch to Signup</span>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <span className="text-blue-400 underline hover:text-blue-300">Switch to Login</span>
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 
-// Helper component for dropdown arrow
-const ChevronDown = ({ size = 16 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="m6 9 6 6 6-6" />
-  </svg>
-);
+export default AuthPage;

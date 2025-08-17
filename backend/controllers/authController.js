@@ -10,37 +10,38 @@ const generateToken = (id, role) => {
 };
 
 export const registerUser = async (req, res) => {
-  const { name, email, phone, password, role } = req.body;
+  const { name, email, phone, password, location, role } = req.body;
 
   if (!role || !["vendor", "supplier"].includes(role)) {
     return res.status(400).json({ message: "Invalid or missing role" });
   }
-
+  
   try {
     const Model = role === "vendor" ? Vendor : Supplier;
-    const existingUser = await Model.findOne({ email });
 
+    const existingUser = await Model.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ message: "Email already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new Model({
+    const newUser = new Model({
       name,
-      email,
+      email: email.toLowerCase(),
       phone,
       password: hashedPassword,
+      location,
     });
 
-    await user.save();
+    await newUser.save();
 
     res.status(201).json({
       message: `${role} registered successfully`,
-      token: generateToken(user._id, role),
+      token: generateToken(newUser._id, role),
     });
   } catch (error) {
-    res.status(500).json({ message: "Registration failed", error });
+    res.status(500).json({ message: "Registration failed", error: error.message });
   }
 };
 
@@ -53,10 +54,10 @@ export const loginUser = async (req, res) => {
 
   try {
     const Model = role === "vendor" ? Vendor : Supplier;
-    const user = await Model.findOne({ email });
+    const user = await Model.findOne({ email: email.toLowerCase() });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid email or user not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -69,6 +70,6 @@ export const loginUser = async (req, res) => {
       token: generateToken(user._id, role),
     });
   } catch (error) {
-    res.status(500).json({ message: "Login failed", error });
+    res.status(500).json({ message: "Login failed", error: error.message });
   }
 };
